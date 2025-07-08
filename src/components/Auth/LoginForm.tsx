@@ -1,6 +1,9 @@
 import React, { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react'
+import { ForgotPassword } from './ForgotPassword'
+import { ResetPassword } from './ResetPassword'
+import { PasswordRequirements } from './PasswordRequirements'
 
 interface LoginFormProps {
   onToggleMode: () => void
@@ -13,12 +16,17 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode, isLogin }) =
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [showResetPassword, setShowResetPassword] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
+  const [showPasswordReqs, setShowPasswordReqs] = useState(false)
   const { signIn, signUp } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setSuccessMessage('')
 
     try {
       const { error } = isLogin 
@@ -35,6 +43,21 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode, isLogin }) =
     } finally {
       setLoading(false)
     }
+  }
+
+  if (showForgotPassword) {
+    return <ForgotPassword onBack={() => setShowForgotPassword(false)} />
+  }
+
+  if (showResetPassword) {
+    return (
+      <ResetPassword 
+        onSuccess={() => {
+          setShowResetPassword(false)
+          setSuccessMessage('Password reset successfully! Please sign in with your new password.')
+        }} 
+      />
+    )
   }
 
   return (
@@ -69,6 +92,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode, isLogin }) =
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => !isLogin && setShowPasswordReqs(true)}
+                onBlur={() => setShowPasswordReqs(false)}
                 placeholder="Enter your password"
                 className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                 required
@@ -81,11 +106,22 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode, isLogin }) =
                 {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
             </div>
+            
+            <PasswordRequirements 
+              password={password} 
+              show={!isLogin && (showPasswordReqs || password.length > 0)} 
+            />
           </div>
 
           {error && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
               {error}
+            </div>
+          )}
+
+          {successMessage && (
+            <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+              {successMessage}
             </div>
           )}
 
@@ -100,9 +136,21 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode, isLogin }) =
               <span>{isLogin ? 'Sign in' : 'Sign up'}</span>
             )}
           </button>
+
+          {isLogin && (
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="text-sm text-blue-600 hover:text-blue-700 transition-colors"
+              >
+                Forgot your password?
+              </button>
+            </div>
+          )}
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-6 text-center space-y-3">
           <p className="text-gray-600">
             {isLogin ? "Don't have an account?" : 'Already have an account?'}
             <button
@@ -112,6 +160,15 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode, isLogin }) =
               {isLogin ? 'Sign up' : 'Sign in'}
             </button>
           </p>
+          
+          <div className="border-t pt-3">
+            <button
+              onClick={() => setShowResetPassword(true)}
+              className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              Have a reset token? Click here
+            </button>
+          </div>
         </div>
       </div>
     </div>

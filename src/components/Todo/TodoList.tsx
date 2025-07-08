@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Todo } from '../../lib/supabase'
-import { todoService } from '../../services/todoService'
+import { Todo, todoService } from '../../services/todoService'
 import { useAuth } from '../../contexts/AuthContext'
 import { TodoItem } from './TodoItem'
 import { AddTodoForm } from './AddTodoForm'
@@ -22,7 +21,7 @@ export const TodoList: React.FC = () => {
   const loadTodos = async () => {
     try {
       setLoading(true)
-      const data = await todoService.getTodos(user!.id)
+      const data = await todoService.getTodos()
       setTodos(data)
     } catch (err) {
       setError('Failed to load todos')

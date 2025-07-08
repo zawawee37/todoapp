@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Todo } from '../../lib/supabase'
+import { Todo } from '../../services/todoService'
 import { Check, X, Edit3, Trash2 } from 'lucide-react'
 
 interface TodoItemProps {

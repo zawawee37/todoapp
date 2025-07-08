@@ -1,10 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { User, Session } from '@supabase/supabase-js'
-import { supabase } from '../lib/supabase'
+
+interface User {
+  id: number
+  email: string
+}
 
 interface AuthContextType {
   user: User | null
-  session: Session | null
+  session: any
   loading: boolean
   signIn: (email: string, password: string) => Promise<{ error: any }>
   signUp: (email: string, password: string) => Promise<{ error: any }>
@@ -12,6 +15,7 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const API_URL = 'http://localhost:3001/api'
 
 export const useAuth = () => {
   const context = useContext(AuthContext)
@@ -23,52 +27,75 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
-  const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
-
-    return () => subscription.unsubscribe()
+    const token = localStorage.getItem('token')
+    const savedUser = localStorage.getItem('user')
+    
+    if (token && savedUser) {
+      setUser(JSON.parse(savedUser))
+    }
+    setLoading(false)
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    return { error }
+    try {
+      const response = await fetch(`${API_URL}/auth/signin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      })
+      
+      const data = await response.json()
+      
+      if (!response.ok) {
+        return { error: data }
+      }
+      
+      localStorage.setItem('token', data.token)
+      localStorage.setItem('user', JSON.stringify(data.user))
+      setUser(data.user)
+      
+      return { error: null }
+    } catch (error) {
+      return { error: { message: 'Network error' } }
+    }
   }
 
   const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    })
-    return { error }
+    try {
+      const response = await fetch(`${API_URL}/auth/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      })
+      
+      const data = await response.json()
+      
+      if (!response.ok) {
+        return { error: data }
+      }
+      
+      localStorage.setItem('token', data.token)
+      localStorage.setItem('user', JSON.stringify(data.user))
+      setUser(data.user)
+      
+      return { error: null }
+    } catch (error) {
+      return { error: { message: 'Network error' } }
+    }
   }
 
   const signOut = async () => {
-    await supabase.auth.signOut()
+    setUser(null)
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
   }
 
   const value = {
     user,
-    session,
+    session: user ? { user } : null,
     loading,
     signIn,
     signUp,
