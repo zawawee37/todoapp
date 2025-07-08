@@ -11,7 +11,7 @@ export interface Todo {
 export type TodoInsert = Omit<Todo, 'id' | 'user_id' | 'created_at' | 'updated_at'>
 export type TodoUpdate = Partial<Omit<Todo, 'id' | 'user_id' | 'created_at'>>
 
-const API_URL = 'http://localhost:3001/api'
+const API_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api`
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token')

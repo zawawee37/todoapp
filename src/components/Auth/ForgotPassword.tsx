@@ -36,6 +36,7 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBack }) => {
         setError(data.error || 'Failed to send reset email')
       }
     } catch (error) {
+      console.error('Password reset request error:', error)
       setError('Network error occurred')
     } finally {
       setLoading(false)

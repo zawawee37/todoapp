@@ -41,6 +41,7 @@ export const ResetPassword: React.FC<ResetPasswordProps> = ({ onSuccess }) => {
         setError(data.error || 'Failed to reset password')
       }
     } catch (error) {
+      console.error('Password reset error:', error)
       setError('Network error occurred')
     } finally {
       setLoading(false)

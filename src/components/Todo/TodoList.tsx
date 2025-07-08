@@ -23,7 +23,8 @@ export const TodoList: React.FC = () => {
       setLoading(true)
       const data = await todoService.getTodos()
       setTodos(data)
-    } catch (err) {
+    } catch (error) {
+      console.error('Error loading todos:', error)
       setError('Failed to load todos')
     } finally {
       setLoading(false)
@@ -35,7 +36,8 @@ export const TodoList: React.FC = () => {
       const newTodo = await todoService.createTodo({ title, description })
       setTodos([newTodo, ...todos])
       setShowAddForm(false)
-    } catch (err) {
+    } catch (error) {
+      console.error('Error creating todo:', error)
       setError('Failed to add todo')
     }
   }
@@ -44,7 +46,8 @@ export const TodoList: React.FC = () => {
     try {
       const updatedTodo = await todoService.toggleTodo(id, completed)
       setTodos(todos.map(todo => todo.id === id ? updatedTodo : todo))
-    } catch (err) {
+    } catch (error) {
+      console.error('Error toggling todo:', error)
       setError('Failed to update todo')
     }
   }
@@ -53,7 +56,8 @@ export const TodoList: React.FC = () => {
     try {
       const updatedTodo = await todoService.updateTodo(id, { title, description })
       setTodos(todos.map(todo => todo.id === id ? updatedTodo : todo))
-    } catch (err) {
+    } catch (error) {
+      console.error('Error updating todo:', error)
       setError('Failed to update todo')
     }
   }
@@ -62,7 +66,8 @@ export const TodoList: React.FC = () => {
     try {
       await todoService.deleteTodo(id)
       setTodos(todos.filter(todo => todo.id !== id))
-    } catch (err) {
+    } catch (error) {
+      console.error('Error deleting todo:', error)
       setError('Failed to delete todo')
     }
   }

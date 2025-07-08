@@ -38,7 +38,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode, isLogin }) =
       } else if (!isLogin) {
         setError('Check your email for a confirmation link!')
       }
-    } catch (err) {
+    } catch (error) {
+      console.error('Auth error:', error)
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)
