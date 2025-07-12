@@ -4,6 +4,10 @@ export interface Todo {
   title: string
   description: string | null
   completed: boolean
+  due_date?: string
+  priority: string
+  category: string
+  type: string
   created_at: string
   updated_at: string
 }
@@ -11,7 +15,7 @@ export interface Todo {
 export type TodoInsert = Omit<Todo, 'id' | 'user_id' | 'created_at' | 'updated_at'>
 export type TodoUpdate = Partial<Omit<Todo, 'id' | 'user_id' | 'created_at'>>
 
-const API_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api`
+const API_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api`
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token')
@@ -32,14 +36,27 @@ export const todoService = {
   },
 
   async createTodo(todo: TodoInsert): Promise<Todo> {
-    const response = await fetch(`${API_URL}/todos`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(todo)
-    })
-    
-    if (!response.ok) throw new Error('Failed to create todo')
-    return response.json()
+    try {
+      console.log('Creating todo:', todo)
+      const response = await fetch(`${API_URL}/todos`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(todo)
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Create todo error:', errorData)
+        throw new Error(errorData.error || 'Failed to create todo')
+      }
+      
+      const result = await response.json()
+      console.log('Todo created successfully:', result)
+      return result
+    } catch (error) {
+      console.error('Todo service error:', error)
+      throw error
+    }
   },
 
   async updateTodo(id: number, updates: TodoUpdate): Promise<Todo> {

@@ -22,10 +22,12 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<AuthResponse>
   signUp: (email: string, password: string) => Promise<AuthResponse>
   signOut: () => Promise<void>
+  logout: () => Promise<void>
+  setUser: (user: User) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
 export const useAuth = () => {
   const context = useContext(AuthContext)
@@ -105,6 +107,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('user')
   }
 
+  const logout = signOut
+
+  const updateUser = (updatedUser: User) => {
+    setUser(updatedUser)
+    localStorage.setItem('user', JSON.stringify(updatedUser))
+  }
+
   const value = {
     user,
     session: user ? { user } : null,
@@ -112,6 +121,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signUp,
     signOut,
+    logout,
+    setUser: updateUser,
   }
 
   return (

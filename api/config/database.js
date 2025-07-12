@@ -48,11 +48,23 @@ const initDatabase = async () => {
         title TEXT NOT NULL CHECK(length(title) <= 200),
         description TEXT CHECK(length(description) <= 1000),
         completed BOOLEAN DEFAULT 0,
+        due_date DATETIME,
+        priority TEXT DEFAULT 'medium' CHECK(priority IN ('low', 'medium', 'high', 'urgent')),
+        category TEXT DEFAULT 'general',
+        type TEXT DEFAULT 'task' CHECK(type IN ('task', 'meeting', 'reminder', 'project', 'personal', 'work', 'shopping', 'health')),
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
       )
     `)
+    
+    // Add missing columns if they don't exist
+    try {
+      await db.runAsync('ALTER TABLE todos ADD COLUMN type TEXT DEFAULT "task"')
+      console.log('Added type column to todos table')
+    } catch (error) {
+      // Column already exists, ignore error
+    }
     
     // Create indexes for performance
     await db.runAsync('CREATE INDEX IF NOT EXISTS idx_todos_user_id ON todos(user_id)')

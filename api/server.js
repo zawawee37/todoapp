@@ -5,6 +5,7 @@ import { initDatabase } from './config/database.js'
 import authRoutes from './routes/auth.js'
 import todoRoutes from './routes/todos.js'
 import passwordRoutes from './routes/password.js'
+import profileRoutes from './routes/profile.js'
 import {
   securityHeaders,
   generalLimiter,
@@ -73,6 +74,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes)
 app.use('/api/todos', todoRoutes)
 app.use('/api/password', passwordRoutes)
+app.use('/api/profile', profileRoutes)
 
 // 404 handler
 app.use('*', (req, res) => {

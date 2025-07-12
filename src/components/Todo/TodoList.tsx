@@ -3,7 +3,8 @@ import { Todo, todoService } from '../../services/todoService'
 import { useAuth } from '../../contexts/AuthContext'
 import { TodoItem } from './TodoItem'
 import { AddTodoForm } from './AddTodoForm'
-import { LogOut, CheckCircle, Circle, PlusCircle } from 'lucide-react'
+import { CheckCircle, Circle, PlusCircle, Filter } from 'lucide-react'
+import Card from '../Layout/Card'
 
 export const TodoList: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([])
@@ -31,9 +32,16 @@ export const TodoList: React.FC = () => {
     }
   }
 
-  const handleAddTodo = async (title: string, description: string) => {
+  const handleAddTodo = async (title: string, description: string, dueDate?: string, priority?: string, category?: string, type?: string) => {
     try {
-      const newTodo = await todoService.createTodo({ title, description })
+      const newTodo = await todoService.createTodo({ 
+        title, 
+        description, 
+        due_date: dueDate, 
+        priority: priority || 'medium', 
+        category: category || 'general',
+        type: type || 'task'
+      })
       setTodos([newTodo, ...todos])
       setShowAddForm(false)
     } catch (error) {
@@ -44,18 +52,25 @@ export const TodoList: React.FC = () => {
 
   const handleToggleTodo = async (id: string, completed: boolean) => {
     try {
-      const updatedTodo = await todoService.toggleTodo(id, completed)
-      setTodos(todos.map(todo => todo.id === id ? updatedTodo : todo))
+      const updatedTodo = await todoService.toggleTodo(parseInt(id), completed)
+      setTodos(todos.map(todo => todo.id === parseInt(id) ? updatedTodo : todo))
     } catch (error) {
       console.error('Error toggling todo:', error)
       setError('Failed to update todo')
     }
   }
 
-  const handleUpdateTodo = async (id: string, title: string, description: string) => {
+  const handleUpdateTodo = async (id: string, title: string, description: string, dueDate?: string, priority?: string, category?: string, type?: string) => {
     try {
-      const updatedTodo = await todoService.updateTodo(id, { title, description })
-      setTodos(todos.map(todo => todo.id === id ? updatedTodo : todo))
+      const updatedTodo = await todoService.updateTodo(parseInt(id), { 
+        title, 
+        description, 
+        due_date: dueDate, 
+        priority, 
+        category,
+        type
+      })
+      setTodos(todos.map(todo => todo.id === parseInt(id) ? updatedTodo : todo))
     } catch (error) {
       console.error('Error updating todo:', error)
       setError('Failed to update todo')
@@ -64,8 +79,8 @@ export const TodoList: React.FC = () => {
 
   const handleDeleteTodo = async (id: string) => {
     try {
-      await todoService.deleteTodo(id)
-      setTodos(todos.filter(todo => todo.id !== id))
+      await todoService.deleteTodo(parseInt(id))
+      setTodos(todos.filter(todo => todo.id !== parseInt(id)))
     } catch (error) {
       console.error('Error deleting todo:', error)
       setError('Failed to delete todo')
@@ -87,89 +102,98 @@ export const TodoList: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="bg-white rounded-2xl shadow-sm p-6 mb-8 border border-gray-100">
+    <div className="p-4 lg:p-8 space-y-6 lg:space-y-8">
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">My Todos</h1>
-              <p className="text-gray-600 mt-1">
-                Welcome back, {user?.email}
-              </p>
+              <p className="text-blue-100 text-sm font-medium">Active Tasks</p>
+              <p className="text-2xl font-bold">{totalCount - completedCount}</p>
             </div>
-            <button
-              onClick={signOut}
-              className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <LogOut className="h-5 w-5" />
-              <span>Sign out</span>
-            </button>
+            <Circle className="h-8 w-8 text-blue-200" />
           </div>
-
-          {/* Stats */}
-          <div className="mt-6 flex items-center space-x-6">
-            <div className="flex items-center space-x-2">
-              <Circle className="h-5 w-5 text-blue-600" />
-              <span className="text-sm font-medium text-gray-700">
-                {totalCount - completedCount} active
-              </span>
+        </Card>
+        
+        <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-green-100 text-sm font-medium">Completed</p>
+              <p className="text-2xl font-bold">{completedCount}</p>
             </div>
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="h-5 w-5 text-green-600" />
-              <span className="text-sm font-medium text-gray-700">
-                {completedCount} completed
-              </span>
+            <CheckCircle className="h-8 w-8 text-green-200" />
+          </div>
+        </Card>
+        
+        <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-purple-100 text-sm font-medium">Total Tasks</p>
+              <p className="text-2xl font-bold">{totalCount}</p>
             </div>
-            <div className="flex-1 bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                style={{ width: totalCount > 0 ? `${(completedCount / totalCount) * 100}%` : '0%' }}
-              ></div>
+            <div className="text-right">
+              <div className="text-xs text-purple-200">Progress</div>
+              <div className="text-sm font-semibold">
+                {totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%
+              </div>
             </div>
           </div>
-        </div>
+        </Card>
+      </div>
 
-        {/* Add Todo Button */}
-        <div className="mb-6">
+      {/* Add Todo Section */}
+      <Card 
+        title="Quick Actions" 
+        icon={<div className="p-2 bg-blue-100 rounded-lg"><PlusCircle className="h-5 w-5 text-blue-600" /></div>}
+        headerAction={
           <button
             onClick={() => setShowAddForm(true)}
-            className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
           >
-            <PlusCircle className="h-5 w-5" />
-            <span>Add new todo</span>
+            <PlusCircle className="h-4 w-4" />
+            <span>Add Todo</span>
           </button>
-        </div>
-
-        {/* Add Todo Form */}
-        {showAddForm && (
-          <div className="mb-6">
-            <AddTodoForm
-              onAdd={handleAddTodo}
-              onCancel={() => setShowAddForm(false)}
-            />
-          </div>
+        }
+      >
+        {showAddForm ? (
+          <AddTodoForm
+            onAdd={handleAddTodo}
+            onCancel={() => setShowAddForm(false)}
+          />
+        ) : (
+          <p className="text-gray-600">Click the button above to add a new todo item.</p>
         )}
+      </Card>
 
-        {/* Error Message */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-            {error}
-          </div>
-        )}
+      {/* Error Message */}
+      {error && (
+        <Card className="border-red-200 bg-red-50">
+          <div className="text-red-700">{error}</div>
+        </Card>
+      )}
 
-        {/* Todo List */}
-        <div className="space-y-3">
-          {todos.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-gray-400 mb-4">
-                <CheckCircle className="h-16 w-16 mx-auto" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No todos yet</h3>
-              <p className="text-gray-600">Create your first todo to get started!</p>
+      {/* Todo List */}
+      <Card 
+        title="Your Tasks" 
+        subtitle={`${todos.length} total tasks`}
+        icon={<div className="p-2 bg-green-100 rounded-lg"><CheckCircle className="h-5 w-5 text-green-600" /></div>}
+        headerAction={
+          <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+            <Filter className="h-5 w-5" />
+          </button>
+        }
+      >
+        {todos.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-gray-400 mb-4">
+              <CheckCircle className="h-16 w-16 mx-auto" />
             </div>
-          ) : (
-            todos.map(todo => (
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No todos yet</h3>
+            <p className="text-gray-600">Create your first todo to get started!</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {todos.map(todo => (
               <TodoItem
                 key={todo.id}
                 todo={todo}
@@ -177,10 +201,10 @@ export const TodoList: React.FC = () => {
                 onUpdate={handleUpdateTodo}
                 onDelete={handleDeleteTodo}
               />
-            ))
-          )}
-        </div>
-      </div>
+            ))}
+          </div>
+        )}
+      </Card>
     </div>
   )
 }
